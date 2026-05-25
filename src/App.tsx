@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import Header from './components/Header';
 import Workflows from './components/Workflows';
-import { Proposal, VerticalType } from './types';
+import { type Proposal, type VerticalType } from './types';
 import { motion, AnimatePresence } from 'motion/react';
 
 export default function App() {

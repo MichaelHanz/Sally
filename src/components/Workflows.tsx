@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect } from 'react';
-import { Proposal, VerticalType, CATALOG, WorkflowStep, BillOfMaterialItem } from '../types';
+import { useState, useEffect } from 'react';
+import { type Proposal, type VerticalType, CATALOG, type WorkflowStep, type BillOfMaterialItem } from '../types';
 import { 
   Bot, 
   Paperclip, 
