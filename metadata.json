@@ -1,0 +1,6 @@
+{
+  "name": "Sally",
+  "description": "Elite autonomous B2B technical sales consultant and precision systems architect.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
