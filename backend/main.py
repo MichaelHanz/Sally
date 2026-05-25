@@ -6,7 +6,7 @@ from backend.agent.orchestrator import run_agent
 from fastapi.responses import FileResponse
 from backend.output.quote_generator import generate_pdf
 
-USE_REAL_AI = False
+USE_REAL_AI = True
 
 app = FastAPI()
 
