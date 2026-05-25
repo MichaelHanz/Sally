@@ -1,7 +1,12 @@
-import asyncio
+import asyncio, json, os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+from backend.agent.orchestrator import run_agent
+from fastapi.responses import FileResponse
+from backend.output.quote_generator import generate_pdf
+
+USE_REAL_AI = False
 
 app = FastAPI()
 
@@ -24,49 +29,77 @@ class BriefInput(BaseModel):
     currency: str = "USD"
 
 
+@app.get("/api/outputs/{filename}")
+async def get_output(filename: str):
+    file_path = os.path.join(os.path.dirname(__file__), "output", "generated", filename)
+    return FileResponse(file_path)
+
+
 @app.post("/api/proposal")
 async def generate_solution(payload: BriefInput):
-    # Pause for 3.5 seconds so the judges see your awesome frontend loading animation
-    await asyncio.sleep(3.5)
 
-    final_proposal = {
-        "proposal_id": "PR-2026-9981",
-        "project_title": "Minimalist High-Performance Smart Workspace",
-        "vertical": payload.vertical,
-        "client_name": payload.client_name,
-        "budget_limit": payload.budget_limit,
-        "delivery_location": payload.delivery_location,
-        "bill_of_materials": [
-            {
-                "item": "Standard Compact Standing Desk",
-                "specification": "Eco-friendly Amber Bamboo top (120x60cm)",
-                "qty": 1,
-                "unit_price": 499.00,
-                "total": 499.00,
+    if not USE_REAL_AI:
+        # Return this static response instantly, consuming 0 API quota
+        mock_data = {
+            "proposal_id": "DEMO-001",
+            "project_title": "Minimalist High-Performance Smart Workspace",
+            "client_name": payload.client_name,
+            "bill_of_materials": [
+                {
+                    "item": "Standard Compact Standing Desk",
+                    "specification": "Amber Bamboo top",
+                    "qty": 1,
+                    "unit_price": 499.00,
+                    "total": 499.00,
+                },
+                {
+                    "item": "Active Lumbar Task Chair",
+                    "specification": "Synchronous-tilt mechanical recline",
+                    "qty": 1,
+                    "unit_price": 450.00,
+                    "total": 450.00,
+                },
+            ],
+            "financial_summary": {
+                "subtotal": 949.00,
+                "shipping_easyparcel": 15.00,
+                "tax_amount": 75.92,
+                "grand_total": 1039.92,
+                "currency": payload.currency,
             },
-            {
-                "item": "Active Lumbar Task Chair",
-                "specification": "Synchronous-tilt mechanical recline",
-                "qty": 1,
-                "unit_price": 450.00,
-                "total": 450.00,
-            },
-        ],
-        "financial_summary": {
-            "subtotal": 949.00,
-            "shipping_easyparcel": 85.00,
-            "tax_amount": 75.92,
-            "grand_total": 1109.92,
-            "currency": payload.currency,
-            "exchange_rate": 1.0,
-        },
-        "agent_reasoning": f"This configuration is specifically optimized for {payload.delivery_location}. The setup features a compact standing desk and ergonomic chair, fully consolidated with EasyParcel delivery, keeping the total well under the {payload.budget_limit} budget constraint.",
-        "created_at": "2026-05-26",
-        "status": "Approved",
-    }
+            "agent_reasoning": "This is a pre-calculated demo proposal. The AI integration is ready to go.",
+        }
+        pdf_filename = generate_pdf(mock_data)
+        mock_data["pdf_url"] = f"/api/outputs/{pdf_filename}"
+        return {"proposal": mock_data}
+    try:
+        print(f"Received request for client: {payload.client_name}")  # DEBUG LOG
 
-    # Your frontend (line 286) strictly looks for "data.proposal"
-    return {"proposal": final_proposal}
+        # This prevents the server from hanging while waiting for the AI
+        proposal_text = await asyncio.to_thread(
+            run_agent,
+            brief=payload.brief,
+            vertical=payload.vertical,
+            client_name=payload.client_name,
+            budget_limit=payload.budget_limit,
+            delivery_location=payload.delivery_location,
+            currency=payload.currency,
+        )
+
+        proposal_json_str = (
+            proposal_text.replace("```json", "").replace("```", "").strip()
+        )
+        proposal = json.loads(proposal_json_str)
+
+        # ADD THIS: Generate PDF and attach the link for real AI
+        pdf_filename = generate_pdf(proposal)
+        proposal["pdf_url"] = f"/api/outputs/{pdf_filename}"
+
+        return {"proposal": proposal}
+
+    except Exception as e:
+        print(f"CRITICAL ERROR in AI Agent: {e}")
+        return {"error": str(e)}
 
 
 if __name__ == "__main__":

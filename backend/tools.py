@@ -1,4 +1,6 @@
 import re
+import json
+import os
 
 
 def calculate_shipping(total_weight_kg: float) -> float:
@@ -45,3 +47,30 @@ def validate_budget(
         "remaining_budget": round(remaining, 2),
         "is_over_budget": grand_total > budget_limit,
     }
+
+
+def search_catalog(query: str, vertical: str = None) -> list:
+    """
+    Reads the mock_catalog.json and returns items matching the query and vertical.
+    Used by the Agent to find hardware and services.
+    """
+    # Build path relative to the file's location
+    data_path = os.path.join(os.path.dirname(__file__), "data", "mock_catalog.json")
+
+    with open(data_path, "r") as f:
+        catalog = json.load(f)
+
+    # Filter logic
+    results = []
+    query_lower = query.lower()
+
+    for item in catalog:
+        # Check if the vertical matches (if specified)
+        if vertical and item["vertical"] != vertical:
+            continue
+
+        # Basic keyword match in name or spec
+        if query_lower in item["name"].lower() or query_lower in item["spec"].lower():
+            results.append(item)
+
+    return results

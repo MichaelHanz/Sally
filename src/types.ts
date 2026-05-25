@@ -41,12 +41,14 @@ export interface Proposal {
   client_name: string;
   budget_limit: number;
   delivery_location: string;
-  bill_of_materials: BillOfMaterialItem[];
-  financial_summary: FinancialSummary;
+  bill_of_materials: any[];
+  financial_summary: any;
   agent_reasoning: string;
   created_at: string;
   status: 'Draft' | 'Sent to Client' | 'Approved' | 'Declined';
   notes?: string;
+
+  pdf_url?: string;
 }
 
 export interface WorkflowStep {
