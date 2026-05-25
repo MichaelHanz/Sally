@@ -345,7 +345,7 @@ export default function Workflows({
     try {
       // Trigger true intelligent Gemini engine constraints solver API call with converted USD defaults
       // Ensure we query standard backend to do actual calculations
-      const response = await fetch('/api/proposal', {
+      const response = await fetch('http://127.0.0.1:8000/api/proposal', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
