@@ -3,52 +3,76 @@ import uuid
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from reportlab.lib import colors
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet
 
 
-def generate_pdf(proposal_data: dict) -> str:
-    # Ensure directory exists
-    output_dir = os.path.join(os.path.dirname(__file__), "generated")
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
+def generate_professional_pdf(proposal_data, output_path):
 
-    filename = f"proposal_{uuid.uuid4().hex[:8]}.pdf"
-    filepath = os.path.join(output_dir, filename)
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    doc = SimpleDocTemplate(output_path, pagesize=letter)
+    elements = []
+    styles = getSampleStyleSheet()
 
-    c = canvas.Canvas(filepath, pagesize=letter)
-    width, height = letter
+    # 1. Header
+    elements.append(
+        Paragraph(f"<b>{proposal_data['project_title']}</b>", styles["Title"])
+    )
+    elements.append(
+        Paragraph(f"Prepared for: {proposal_data['client_name']}", styles["Normal"])
+    )
+    elements.append(Spacer(1, 20))
 
-    # Header
-    c.setFont("Helvetica-Bold", 20)
-    c.drawString(50, height - 50, f"Proposal #{proposal_data['proposal_id']}")
-
-    c.setFont("Helvetica", 12)
-    c.drawString(50, height - 70, f"Client: {proposal_data['client_name']}")
-    c.drawString(50, height - 85, f"Project: {proposal_data['project_title']}")
-
-    # Table Header
-    y = height - 130
-    c.line(50, y + 15, 550, y + 15)
-    c.setFont("Helvetica-Bold", 10)
-    c.drawString(50, y, "Item")
-    c.drawString(300, y, "Qty")
-    c.drawString(400, y, "Price")
-    c.line(50, y - 5, 550, y - 5)
-
-    # BOM Items
-    c.setFont("Helvetica", 10)
-    y -= 25
+    # 2. Table Data
+    data = [["Item", "Specification", "Qty", "Unit Price", "Total"]]
     for item in proposal_data["bill_of_materials"]:
-        c.drawString(50, y, item["item"][:40])
-        c.drawString(300, y, str(item["qty"]))
-        c.drawString(400, y, f"${item['unit_price']:.2f}")
-        y -= 20
+        item_p = Paragraph(item["item"], styles["Normal"])
+        spec_p = Paragraph(item["specification"], styles["Normal"])
+        data.append(
+            [
+                item_p,
+                spec_p,
+                str(item["qty"]),
+                f"${item['unit_price']:.2f}",
+                f"${item['total']:.2f}",
+            ]
+        )
 
-    # Financials
-    y -= 20
-    c.line(400, y + 10, 550, y + 10)
-    c.setFont("Helvetica-Bold", 12)
-    c.drawString(300, y, "Grand Total:")
-    c.drawString(450, y, f"${proposal_data['financial_summary']['grand_total']:.2f}")
+    # 3. Create Table
+    t = Table(data, colWidths=[120, 240, 30, 60, 70])
 
-    c.save()
-    return filename
+    # PROFESSIONAL STYLING (The secret sauce)
+    t.setStyle(
+        TableStyle(
+            [
+                (
+                    "BACKGROUND",
+                    (0, 0),
+                    (-1, 0),
+                    colors.HexColor("#2c3e50"),
+                ),  # Dark Header
+                ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
+                ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+                ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+                ("BOTTOMPADDING", (0, 0), (-1, 0), 12),
+                ("BACKGROUND", (0, 1), (-1, -1), colors.whitesmoke),
+                ("GRID", (0, 0), (-1, -1), 1, colors.black),
+            ]
+        )
+    )
+
+    elements.append(t)
+    elements.append(Spacer(1, 20))
+
+    # 4. Financial Summary
+    fin = proposal_data["financial_summary"]
+    summary = [
+        ["Subtotal:", f"${fin['subtotal']:.2f}"],
+        ["Shipping:", f"${fin['shipping_easyparcel']:.2f}"],
+        ["Tax:", f"${fin['tax_amount']:.2f}"],
+        ["GRAND TOTAL:", f"${fin['grand_total']:.2f}"],
+    ]
+    fin_table = Table(summary, colWidths=[300, 100])
+    elements.append(fin_table)
+
+    doc.build(elements)

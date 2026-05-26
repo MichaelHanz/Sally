@@ -1,10 +1,11 @@
+import uuid
 import asyncio, json, os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from backend.agent.orchestrator import run_agent
 from fastapi.responses import FileResponse
-from backend.output.quote_generator import generate_pdf
+from backend.output.quote_generator import generate_professional_pdf
 
 USE_REAL_AI = True
 
@@ -37,9 +38,12 @@ async def get_output(filename: str):
 
 @app.post("/api/proposal")
 async def generate_solution(payload: BriefInput):
+    # Setup directory: ensures folder exists before we write to it
+    base_output_dir = os.path.join(os.path.dirname(__file__), "output", "generated")
+    os.makedirs(base_output_dir, exist_ok=True)
 
     if not USE_REAL_AI:
-        # Return this static response instantly, consuming 0 API quota
+        # Mock Data logic
         mock_data = {
             "proposal_id": "DEMO-001",
             "project_title": "Minimalist High-Performance Smart Workspace",
@@ -54,7 +58,7 @@ async def generate_solution(payload: BriefInput):
                 },
                 {
                     "item": "Active Lumbar Task Chair",
-                    "specification": "Synchronous-tilt mechanical recline",
+                    "specification": "Synchronous-tilt recline",
                     "qty": 1,
                     "unit_price": 450.00,
                     "total": 450.00,
@@ -67,15 +71,18 @@ async def generate_solution(payload: BriefInput):
                 "grand_total": 1039.92,
                 "currency": payload.currency,
             },
-            "agent_reasoning": "This is a pre-calculated demo proposal. The AI integration is ready to go.",
+            "agent_reasoning": "Demo proposal.",
         }
-        pdf_filename = generate_pdf(mock_data)
+
+        pdf_filename = f"proposal_{mock_data['proposal_id']}.pdf"
+        output_path = os.path.join(base_output_dir, pdf_filename)
+
+        generate_professional_pdf(mock_data, output_path)
         mock_data["pdf_url"] = f"/api/outputs/{pdf_filename}"
         return {"proposal": mock_data}
-    try:
-        print(f"Received request for client: {payload.client_name}")  # DEBUG LOG
 
-        # This prevents the server from hanging while waiting for the AI
+    try:
+        # Real AI Logic
         proposal_text = await asyncio.to_thread(
             run_agent,
             brief=payload.brief,
@@ -91,8 +98,15 @@ async def generate_solution(payload: BriefInput):
         )
         proposal = json.loads(proposal_json_str)
 
-        # ADD THIS: Generate PDF and attach the link for real AI
-        pdf_filename = generate_pdf(proposal)
+        # Generate unique filename
+        unique_id = proposal.get("proposal_id", uuid.uuid4().hex[:6])
+        pdf_filename = f"proposal_{unique_id}.pdf"
+        output_path = os.path.join(base_output_dir, pdf_filename)
+
+        # Generate the PDF using your new professional function
+        generate_professional_pdf(proposal, output_path)
+
+        # Attach link for the frontend
         proposal["pdf_url"] = f"/api/outputs/{pdf_filename}"
 
         return {"proposal": proposal}
