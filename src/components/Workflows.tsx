@@ -454,15 +454,19 @@ export default function Workflows({
     }
 
     // Try finding price tokens
-    const currencyMatch = lowerText.match(
-      /(?:under|below|budget|limit|max|up to)?\s*(?:\$|rm|usd)?\s*([\d,]+)\s*(k)?/i,
+    const budgetMatch = lowerText.match(
+      /(?:budget|under|below|limit|max|for|up to)\s*(?:of|is)?\s*(?:\$|rm|usd)?\s*([\d,]+)\s*(k)?/i,
     );
-    if (currencyMatch) {
-      let parsedVal = parseFloat(currencyMatch[1].replace(/,/g, ""));
-      if (currencyMatch[2] && currencyMatch[2].toLowerCase() === "k") {
+    if (budgetMatch) {
+      let parsedVal = parseFloat(budgetMatch[1].replace(/,/g, ""));
+      // Handle "5k" syntax
+      if (budgetMatch[2] && budgetMatch[2].toLowerCase() === "k") {
         parsedVal *= 1000;
       }
-      if (parsedVal > 0) {
+
+      // SAFETY FLOOR: If it parsed something like '10' (from 10x10), ignore it
+      // and stick to the default of 5000.
+      if (parsedVal > 100) {
         budgetLimit = parsedVal;
       }
     }
@@ -571,11 +575,15 @@ export default function Workflows({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           brief: promptText,
-          vertical: parsed.vertical,
-          client_name: parsed.clientName,
-          budget_limit: parsed.budgetLimit,
-          delivery_location: parsed.deliveryLocation,
-          currency: parsed.currency,
+          vertical: parsed.vertical || "Enterprise Server", // Fallback vertical
+          client_name: parsed.clientName || "Acme Corp", // Fallback name
+          // FORCE a sensible default (e.g., 5000) if the parser fails
+          budget_limit:
+            parsed.budgetLimit && parsed.budgetLimit > 100
+              ? parsed.budgetLimit
+              : 5000,
+          delivery_location: parsed.deliveryLocation || "Malaysia",
+          currency: parsed.currency || "MYR",
         }),
       });
 
