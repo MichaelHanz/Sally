@@ -25,29 +25,50 @@ I built Sally to solve the real-world bottleneck of manual hardware quoting, whi
 
 **The Strict Project Constraints & Pivots:**
 
-| Challenge              | What Happened            | How We Solved It            |
-| ---------------------- | ------------------------ | --------------------------- |
-| LLM hallucinations     | Bad math, broken JSON    | Reflexive supervisor loop   |
-| API wall at submission | Groq limit hit zero      | Hot-swapped to Llama 3.1    |
-| Live demo crashes      | Third-party LLM downtime | USE_REAL_AI fallback toggle |
+| Challenge         | What Happened                  | How We Solved It                          |
+| ----------------- | ------------------------------ | ----------------------------------------- |
+| Hallucinated Math | LLM guesses tax/shipping       | Deterministic Tool-Use (Python)           |
+| Logic Loops       | AI got stuck in infinite retry | Supervisor Loop + 2s Cooldown             |
+| API Wall          | Groq rate limits hit           | Function Calling + Rate-Limit-Aware Agent |
+| Data Integrity    | Third-party LLM downtime       | Real-time search_catalog RAG              |
 
 ---
 
 ## 🏗️ Architecture
 
 ```
-Client Brief (React)
-       ↓
-FastAPI Backend
-       ↓
-Agentic Reflexive Loop
-  ├── Groq LLaMA 3.1 (inference)
-  ├── Budget Validator
-  ├── JSON Schema Checker
-  └── Self-Correction Critique
-       ↓
-PDF Proposal (ReportLab)
+User Brief (React) → FastAPI Endpoint
+                        ↓
+            [ Agentic Supervisor Loop ]
+            │ 1. Reasoning: Llama 3.1 (Reason)
+            │ 2. Tool Execution (Act): search_catalog, shipping, tax
+            │ 3. Critique: Budget/Validation Supervisor (Reflect)
+            └─────────── (Retry until valid) ───────────┘
+                        ↓
+             Validated JSON Proposal
+                        ↓
+            PDF Generation & UI Rendering for the results
 ```
+
+---
+
+## 🧠 Technical Highlights
+
+### 1. **The Agentic ReAct Loop**
+
+Sally operates on a Reason + Act (ReAct) pattern, ensuring every decision is validated before execution:
+
+- **Reason**: The LLM analyzes constraints and client requirements.
+- **Act**: The agent dynamically calls Python-based tools to retrieve real-world data.
+- **Supervisor**: A supervisory feedback loop critiques the proposal against budget constraints, triggering autonomous retries until a compliant, mathematically sound solution is found.
+
+### 2. **Deterministic Tool Use**
+
+To prevent "hallucinated math," all financial calculations are handled by Python functions, not the LLM. The model only decides _which_ tools to call and _when_.
+
+### 3. **Rate-Limit-Aware Design**
+
+I chose Llama 3.1 for its exceptional balance of reasoning speed and cost efficiency. To handle the strict 10 RPM rate limit imposed by Groq for free-tier users, the agent implements an adaptive **5-second cooldown** between tool-use cycles. This ensures the system remains reliable and avoids token waste from unnecessary retries. And also cuz im broke lol.
 
 ---
 
@@ -147,5 +168,12 @@ Run the following command to start the local development server.
 ```bash
 npm run dev
 ```
+
+## 🧪 Demo Scenarios
+
+Test the agent's agentic reasoning with these prompts:
+
+1. **Budget Enforcement:** "I need a high-power Deep Learning GPU stack for my startup in Kuching, budget under RM 45,000." (Watch the terminal—the agent will attempt the quote, hit the supervisor limit, and re-optimize!)
+2. **Tool-Use Verification:** "Build an ergonomic home office for Penang." (Watch the terminal—you will see `⚙️ [Tool Call]` logs as it calculates real shipping/tax).
 
 </details>
