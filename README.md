@@ -10,6 +10,8 @@
 ![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)
 ![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
 ![Groq](https://img.shields.io/badge/Groq-f55036?style=for-the-badge&logo=groq&logoColor=white)
+![GitHub stars](https://img.shields.io/github/stars/MichaelHanz/Sally)
+![GitHub views](https://visitor-badge.laobi.icu/badge?page_id=MichaelHanz.Sally)
 
 </div>
 
@@ -147,8 +149,3 @@ npm run dev
 ```
 
 </details>
-
-<div align="center">
-  Built for Asia Pacific University Hackathon 2025!<br/>
-  <img src="https://www.apu.edu.my/themes/apu/logo.png" alt="APU Logo" width="150"/>
-</div>
