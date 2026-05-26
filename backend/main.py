@@ -6,8 +6,25 @@ from pydantic import BaseModel
 from backend.agent.orchestrator import run_agent
 from fastapi.responses import FileResponse
 from backend.output.quote_generator import generate_professional_pdf
+from backend.tools import calculate_shipping, calculate_tax
 
 USE_REAL_AI = True
+
+# Load catalog for weight mapping
+def load_catalog_weights():
+    catalog_path = os.path.join(os.path.dirname(__file__), "data", "mock_catalog.json")
+    try:
+        with open(catalog_path, "r") as f:
+            catalog = json.load(f)
+        return {item["name"].lower(): item.get("weightKg", 0) for item in catalog}
+    except Exception as e:
+        print(f"Error loading catalog weights: {e}")
+        return {}
+
+CATALOG_WEIGHTS = load_catalog_weights()
+
+def get_weight(item_name: str) -> float:
+    return CATALOG_WEIGHTS.get(item_name.lower(), 0.0)
 
 app = FastAPI()
 
@@ -97,6 +114,26 @@ async def generate_solution(payload: BriefInput):
             proposal_text.replace("```json", "").replace("```", "").strip()
         )
         proposal = json.loads(proposal_json_str)
+
+        # Recalculate deterministic figures over the LLM-selected items
+        bom = proposal.get("bill_of_materials", [])
+        subtotal = sum(item.get("unit_price", 0.0) * item.get("qty", 0) for item in bom)
+        for item in bom:
+            item["total"] = item.get("unit_price", 0.0) * item.get("qty", 0)
+
+        total_weight = sum(get_weight(item.get("item", "")) * item.get("qty", 0) for item in bom)
+
+        shipping = calculate_shipping(total_weight)
+        tax_details = calculate_tax(subtotal, proposal.get("delivery_location", payload.delivery_location))
+
+        if "financial_summary" not in proposal:
+            proposal["financial_summary"] = {}
+
+        # Overwrite LLM values to guarantee perfect mathematical accuracy
+        proposal["financial_summary"]["subtotal"] = subtotal
+        proposal["financial_summary"]["shipping_easyparcel"] = shipping
+        proposal["financial_summary"]["tax_amount"] = tax_details["tax_amount"]
+        proposal["financial_summary"]["grand_total"] = round(subtotal + shipping + tax_details["tax_amount"], 2)
 
         # Generate unique filename
         unique_id = proposal.get("proposal_id", uuid.uuid4().hex[:6])
