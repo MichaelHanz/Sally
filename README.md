@@ -1,3 +1,5 @@
+<div align="center">
+
 # 🤖 Sally | Autonomous B2B Sales Engineer Agent
 
 > A custom-built, full-stack AI agent designed to automate the grueling B2B sales engineering process. Sally takes a natural-language client brief and autonomously sources, validates, and formats a mathematically sound Bill of Materials (BOM) into a production-ready PDF proposal.
@@ -9,6 +11,8 @@
 ![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
 ![Groq](https://img.shields.io/badge/Groq-f55036?style=for-the-badge&logo=groq&logoColor=white)
 
+</div>
+
 ---
 
 ## 🎯 The "Why": Evolving Beyond Simple API Wrappers
@@ -19,9 +23,29 @@ I built Sally to solve the real-world bottleneck of manual hardware quoting, whi
 
 **The Strict Project Constraints & Pivots:**
 
-- **🚫 No Unverified Output:** LLMs are notoriously bad at math and strict formatting. I engineered an **Agentic Reflexive Loop** in Python. If the LLM hallucinates prices, goes over the client's strict budget, or breaks the JSON schema, the backend intercepts the response, issues a harsh critique, and forces the AI to self-correct _before_ the user ever sees the data.
-- **🔀 The Hackathon Hot-Swap:** When our original cloud provider hit us with a `limit: 0` API wall hours before submission, we executed a rapid pivot. We ripped out the native SDK, integrated Groq (Llama-3.1), and proved that our reflexive supervisor architecture is completely model-agnostic.
-- **🛡️ Graceful Degradation:** Built with a `USE_REAL_AI = False` dependency injection toggle. If the third-party LLM goes down entirely, the system instantly falls back to serving a mathematically perfect demo payload, ensuring the UI and PDF generation never crash during a demo.
+| Challenge              | What Happened            | How We Solved It            |
+| ---------------------- | ------------------------ | --------------------------- |
+| LLM hallucinations     | Bad math, broken JSON    | Reflexive supervisor loop   |
+| API wall at submission | Groq limit hit zero      | Hot-swapped to Llama 3.1    |
+| Live demo crashes      | Third-party LLM downtime | USE_REAL_AI fallback toggle |
+
+---
+
+## 🏗️ Architecture
+
+```
+Client Brief (React)
+       ↓
+FastAPI Backend
+       ↓
+Agentic Reflexive Loop
+  ├── Groq LLaMA 3.1 (inference)
+  ├── Budget Validator
+  ├── JSON Schema Checker
+  └── Self-Correction Critique
+       ↓
+PDF Proposal (ReportLab)
+```
 
 ---
 
@@ -36,7 +60,8 @@ To run Sally locally, your environment must meet the following requirements:
 
 ---
 
-## 🚀 Local Installation & Setup Guide
+<details>
+<summary>🚀 Local Installation & Setup Guide</summary>
 
 Follow these step-by-step instructions to get the application running on your local machine.
 
@@ -44,5 +69,84 @@ Follow these step-by-step instructions to get the application running on your lo
 
 ```bash
 git clone [https://github.com/MichaelHanz/Sally.git](https://github.com/MichaelHanz/Sally.git)
-cd sally
+cd APU
 ```
+
+### 2. Backend Setup (FastAPI + Agentic Loop)
+
+Open a new terminal window and ensure you are in the root directory of the project.
+
+**A. Create a virtual environment**
+This isolates the Python dependencies so they don't conflict with your system.
+
+```bash
+python -m venv .venv
+```
+
+**B. Activate the virtual environment**
+Run the specific command for your operating system.
+
+For Windows:
+
+```bash
+.venv\Scripts\activate
+```
+
+For macOS / Linux:
+
+```bash
+source .venv/bin/activate
+```
+
+**C. Install the dependencies**
+With the virtual environment active (you should see (.venv) in your terminal prompt), install the required packages.
+
+```bash
+pip install fastapi uvicorn groq python-dotenv pydantic reportlab
+```
+
+**D. Configure the Environment Variables**
+Navigate into the backend folder and create your environment file.
+
+```bash
+cd backend
+touch .env
+```
+
+**E. Insert Your API Key**
+Open the newly created `.env` file and add your Groq API key.
+
+```bash
+GROQ_API_KEY="groq-api-key-here"
+```
+
+**F. Start the Server**
+Ensure you are still in the backend directory with the virtual environment active.
+
+```bash
+uvicorn main:app --reload
+```
+
+### 3. Frontend Setup (React + Tailwind)
+
+Open a new terminal window (ensure you are in the root `APU` directory, not the backend folder).
+
+**A. Install Dependencies**
+Install the necessary packages for the frontend application.
+
+```bash
+npm install
+```
+
+**B. Start the Development Server**
+Run the following command to start the local development server.
+
+```bash
+npm run dev
+```
+
+</details>
+
+<div align="center">
+  Built in 48 hours at APU Hackathon 2025
+</div>
