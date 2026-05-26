@@ -68,8 +68,8 @@ Follow these step-by-step instructions to get the application running on your lo
 ### 1. Clone the Repository
 
 ```bash
-git clone [https://github.com/MichaelHanz/Sally.git](https://github.com/MichaelHanz/Sally.git)
-cd APU
+git clone https://github.com/MichaelHanz/Sally.git
+cd Sally
 ```
 
 ### 2. Backend Setup (FastAPI + Agentic Loop)
@@ -121,15 +121,16 @@ GROQ_API_KEY="groq-api-key-here"
 ```
 
 **F. Start the Server**
-Ensure you are still in the backend directory with the virtual environment active.
+Navigate back to the root directory before starting the server to ensure the Python imports path correctly with the virtual environment active!
 
 ```bash
-uvicorn main:app --reload
+cd ..
+python -m uvicorn backend.main:app --reload
 ```
 
 ### 3. Frontend Setup (React + Tailwind)
 
-Open a new terminal window (ensure you are in the root `APU` directory, not the backend folder).
+Open a new terminal window (ensure you are in the root `Sally` directory, not the backend folder).
 
 **A. Install Dependencies**
 Install the necessary packages for the frontend application.
@@ -148,5 +149,6 @@ npm run dev
 </details>
 
 <div align="center">
-  Built in 48 hours at APU Hackathon 2025
+  Built for Asia Pacific University Hackathon 2025!<br/>
+  <img src="https://www.apu.edu.my/themes/apu/logo.png" alt="APU Logo" width="150"/>
 </div>
