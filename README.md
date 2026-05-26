@@ -74,12 +74,30 @@ I chose Llama 3.1 for its exceptional balance of reasoning speed and cost effici
 
 ## ⚙️ System Requirements & Dependencies
 
-To run Sally locally, your environment must meet the following requirements:
+Sally operates on a decoupled architecture. To run this project locally, your environment must meet the following requirements:
 
-- **Node.js**: v18.0.0 or higher (for the React/Vite frontend)
-- **Python**: v3.9 or higher (for the FastAPI backend)
-- **Package Managers**: `npm` (Frontend) and `pip` (Backend)
-- **External API**: A free Groq API Key (for Llama 3.1 inference)
+### System Requirements
+
+- **Node.js**: v18.0.0 or higher
+- **Python**: v3.9 or higher (Tested on v3.12)
+- **Git**: For version control and cloning
+- **External API**: A free [Groq API Key](https://console.groq.com/keys) (for Llama 3.1 inference)
+
+### Core Dependencies
+
+**Backend (Python):**
+
+- `fastapi` & `uvicorn` (API Framework & Server)
+- `groq` (LLM Inference)
+- `reportlab` (PDF Generation)
+- `pydantic` (Data Validation)
+
+**Frontend (React):**
+
+- `react` & `react-dom` (v18+)
+- `vite` (Build Tool)
+- `tailwindcss` & `framer-motion` (UI & Animations)
+- `lucide-react` (Icons)
 
 ---
 
