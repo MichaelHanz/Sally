@@ -1114,18 +1114,18 @@ export default function Workflows({
                               <td className="p-3.5 pl-4 font-bold text-slate-900">
                                 <div className="flex flex-col">
                                   <a
-                                    href={platformInfo.url}
+                                    href={`https://www.google.com/search?tbm=shop&q=${encodeURIComponent(bom.item)}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="hover:underline flex items-center gap-1 text-indigo-950 hover:text-indigo-700 text-xs font-bold font-sans transition"
-                                    title={`Verify pricing and availability for ${bom.item} on ${platformInfo.name}`}
+                                    title={`Search Google Shopping for ${bom.item}`}
                                   >
                                     <span>{bom.item}</span>
                                     <ExternalLink className="h-3 w-3 text-slate-400 group-hover:text-indigo-600 transition inline-block shrink-0" />
                                   </a>
                                   <span className="text-[9px] text-slate-400 font-bold mt-1 inline-flex items-center gap-1">
                                     <span className="h-1.5 w-1.5 rounded-full bg-indigo-500" />
-                                    Scanned: {platformInfo.name}
+                                    Scanned: Google Shopping
                                   </span>
                                 </div>
                               </td>
